@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Users, Building, ShieldCheck, Clock, Calendar, Key, UserPlus, Search, FileText, UserX, FileSpreadsheet, PlusCircle, MinusCircle, Edit } from 'lucide-react';
+import { LogOut, Users, Building, ShieldCheck, Clock, Calendar, Key, UserPlus, Search, FileText, UserX, FileSpreadsheet, PlusCircle, MinusCircle, Edit, FilePlus } from 'lucide-react';
 import EmployeeManager from '../components/EmployeeManager';
 import DepartmentManager from '../components/DepartmentManager';
 import AttendancePunch from '../components/AttendancePunch';
 import LeaveManager from '../components/LeaveManager';
 import EmployeeDashboard from '../components/EmployeeDashboard';
 import ReportGeneration from '../components/ReportGeneration';
+import ChangePassword from './ChangePassword';
+import ManageInactive from '../components/ManageInactive';
+import GenerateAttendance from '../components/GenerateAttendance';
+import logo from '../assets/logo.webp';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
@@ -18,22 +22,9 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  const navItemStyle = {
-    padding: '8px 15px',
-    borderRadius: '10px',
-    cursor: 'pointer',
-    color: '#6a1b9a',
-    fontSize: '14px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    transition: '0.2s',
-    marginBottom: '2px'
-  };
-
   const categoryStyle = {
     fontWeight: 'bold',
-    color: '#6a1b9a',
+    color: 'var(--green-300)',
     fontSize: '15px',
     padding: '10px 0 5px 5px',
     display: 'flex',
@@ -44,9 +35,12 @@ const Dashboard = () => {
   return (
     <div className="app-container">
       {/* Sidebar */}
-      <div className="sidebar" style={{ width: '280px', padding: '15px', backgroundColor: '#f3e5f5' }}>
-        <div style={{ paddingBottom: '15px', borderBottom: '1px solid #ce93d8' }}>
-          <h2 style={{ margin: 0, color: '#6a1b9a', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px' }}>
+      <div className="sidebar" style={{ width: '280px', padding: '15px', backgroundColor: 'var(--green-700)' }}>
+        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+          <img src={logo} alt="Company Logo" style={{ maxWidth: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%' }} />
+        </div>
+        <div style={{ paddingBottom: '15px', borderBottom: '1px solid var(--green-600)' }}>
+          <h2 style={{ margin: 0, color: 'var(--green-100)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px' }}>
             <ShieldCheck /> {user?.role === 'Admin' ? 'Admin Dashboard' : user?.role === 'HR Manager' ? 'HR Manager Dashboard' : 'Employee Dashboard'}
           </h2>
         </div>
@@ -55,69 +49,87 @@ const Dashboard = () => {
           {/* Change Password - All roles */}
           <div style={categoryStyle}><Key size={18}/> Change Password</div>
           <div className="sidebar-sub">
-            <div style={navItemStyle} onClick={() => navigate('/password')}>Change Password</div>
+            <div className="nav-item-custom" onClick={() => navigate('/password')}>Change Password</div>
           </div>
 
-          {/* Admin / HR Manager features */}
-          {(user?.role === 'Admin' || user?.role === 'HR Manager') && (
-            <>
-              <div style={categoryStyle}><Users size={18}/> Employee Manage...</div>
-              <div className="sidebar-sub" style={{ paddingLeft: '20px' }}>
-                <div style={navItemStyle} onClick={() => navigate('/employees')}><Search size={14}/> View Employees</div>
-                <div style={navItemStyle} onClick={() => navigate('/employees/add')}><UserPlus size={14}/> Add Employee</div>
-                <div style={navItemStyle} onClick={() => navigate('/employees/search')}><Search size={14}/> Search Employees</div>
-                <div style={navItemStyle} onClick={() => navigate('/leave/generate')}><FileText size={14}/> Generate Leave</div>
-                <div style={navItemStyle} onClick={() => navigate('/employees/inactive')}><UserX size={14}/> Manage Inactive</div>
-                <div style={navItemStyle} onClick={() => navigate('/attendance/generate')}><FileSpreadsheet size={14}/> Generate Attendance</div>
-                <div style={navItemStyle} onClick={() => navigate('/leave/register')}><Calendar size={14}/> Register Leave</div>
-                <div style={navItemStyle} onClick={() => navigate('/reports/generate')}><FileSpreadsheet size={14}/> Generate Reports</div>
-              </div>
-            </>
-          )}
-
-          {/* Department Management - Admin Only */}
+          {/* Admin only */}
           {user?.role === 'Admin' && (
             <>
-              <div style={categoryStyle}><Building size={18}/> Department Mana...</div>
-              <div className="sidebar-sub" style={{ paddingLeft: '20px' }}>
-                <div style={navItemStyle} onClick={() => navigate('/departments')}><Search size={14}/> View Departments</div>
-                <div style={navItemStyle} onClick={() => navigate('/departments/add')}><PlusCircle size={14}/> Add Department</div>
-                <div style={navItemStyle} onClick={() => navigate('/departments/remove')}><MinusCircle size={14}/> Remove Department</div>
-                <div style={navItemStyle} onClick={() => navigate('/departments/search')}><Search size={14}/> Search Department</div>
-                <div style={navItemStyle} onClick={() => navigate('/departments/update')}><Edit size={14}/> Update Department</div>
+              <div style={categoryStyle}><Users size={18}/> Employee Management</div>
+              <div className="sidebar-sub">
+                <div className="nav-item-custom" onClick={() => navigate('/employees/view')}><Users size={14}/> View Employees</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/add')}><UserPlus size={14}/> Add Employee</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/search')}><Search size={14}/> Search Employees</div>
+                <div className="nav-item-custom" onClick={() => navigate('/leave/generate')}><FilePlus size={14}/> Generate Leave</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/inactive')}><UserX size={14}/> Manage Inactive</div>
+                <div className="nav-item-custom" onClick={() => navigate('/attendance/generate')}><FileSpreadsheet size={14}/> Generate Attendance</div>
+                <div className="nav-item-custom" onClick={() => navigate('/leave/register')}><FilePlus size={14}/> Register Leave</div>
+                <div className="nav-item-custom" onClick={() => navigate('/reports')}><FileSpreadsheet size={14}/> Generate Reports</div>
+                <div className="nav-item-custom" onClick={() => navigate('/attendance/punch')}><Clock size={14}/> Punch In</div>
+              </div>
+
+              <div style={categoryStyle}><Building size={18}/> Department Management</div>
+              <div className="sidebar-sub">
+                <div className="nav-item-custom" onClick={() => navigate('/departments/view')}><Building size={14}/> View Departments</div>
+                <div className="nav-item-custom" onClick={() => navigate('/departments/add')}><PlusCircle size={14}/> Add Department</div>
+                <div className="nav-item-custom" onClick={() => navigate('/departments/remove')}><MinusCircle size={14}/> Remove Department</div>
+                <div className="nav-item-custom" onClick={() => navigate('/departments/search')}><Search size={14}/> Search Department</div>
+                <div className="nav-item-custom" onClick={() => navigate('/departments/update')}><Edit size={14}/> Update Department</div>
               </div>
             </>
           )}
 
-          {/* Employee specifics */}
+          {/* HR Manager only */}
+          {user?.role === 'HR Manager' && (
+            <>
+              <div style={categoryStyle}><Users size={18}/> Employee Management</div>
+              <div className="sidebar-sub">
+                <div className="nav-item-custom" onClick={() => navigate('/employees/view')}><Users size={14}/> View Employees</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/add')}><UserPlus size={14}/> Add Employee</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/search')}><Search size={14}/> Search Employees</div>
+                <div className="nav-item-custom" onClick={() => navigate('/leave/generate')}><FilePlus size={14}/> Generate Leave</div>
+                <div className="nav-item-custom" onClick={() => navigate('/employees/inactive')}><UserX size={14}/> Manage Inactive</div>
+                <div className="nav-item-custom" onClick={() => navigate('/attendance/generate')}><FileSpreadsheet size={14}/> Generate Attendance</div>
+                <div className="nav-item-custom" onClick={() => navigate('/leave/register')}><FilePlus size={14}/> Register Leave</div>
+                <div className="nav-item-custom" onClick={() => navigate('/reports')}><FileSpreadsheet size={14}/> Generate Reports</div>
+                <div className="nav-item-custom" onClick={() => navigate('/attendance/punch')}><Clock size={14}/> Punch In</div>
+              </div>
+            </>
+          )}
+
+          {/* Employee only */}
           {user?.role === 'Employee' && (
             <>
               <div style={categoryStyle}><Users size={18}/> Employee Actions</div>
-              <div className="sidebar-sub" style={{ paddingLeft: '20px' }}>
-                <div style={navItemStyle} onClick={() => navigate('/')}>Dashboard</div>
-                <div style={navItemStyle} onClick={() => navigate('/attendance')}>Punch In/Out</div>
-                <div style={navItemStyle} onClick={() => navigate('/profile')}>View My Profile</div>
+              <div className="sidebar-sub">
+                <div className="nav-item-custom" onClick={() => navigate('/')}><Clock size={14}/> Dashboard</div>
+                <div className="nav-item-custom" onClick={() => navigate('/attendance/punch')}><Clock size={14}/> Punch In</div>
+                <div className="nav-item-custom" onClick={() => navigate('/profile')}><UserPlus size={14}/> View My Profile</div>
               </div>
             </>
           )}
-        </div>
 
-        <div style={{...navItemStyle, color: '#d32f2f', fontWeight: 'bold'}} onClick={handleLogout}>
-          <LogOut size={18}/> Log Out
+          {/* Common for all */}
+          <div style={categoryStyle}><LogOut size={18}/> Logout</div>
+          <div className="sidebar-sub">
+            <div className="nav-item-custom" onClick={handleLogout}><LogOut size={14}/> Logout</div>
+          </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="main-content">
+      {/* Main Content */}
+      <div className="main-content" style={{ flex: 1, height: '100vh', overflowY: 'auto', backgroundColor: 'var(--green-100)' }}>
         <Routes>
-          <Route path="/" element={user?.role === 'Employee' ? <EmployeeDashboard /> : <h1 style={{color: '#6a1b9a'}}>Welcome, {user?.name}!</h1>} />
+          <Route path="/" element={<EmployeeDashboard />} />
+          <Route path="/profile" element={<EmployeeDashboard />} />
+          <Route path="/employees/inactive" element={<ManageInactive />} />
           <Route path="/employees/*" element={<EmployeeManager />} />
           <Route path="/departments/*" element={<DepartmentManager />} />
+          <Route path="/attendance/generate" element={<GenerateAttendance />} />
           <Route path="/attendance/*" element={<AttendancePunch />} />
           <Route path="/leave/*" element={<LeaveManager />} />
-          <Route path="/reports/*" element={<ReportGeneration />} />
-          <Route path="/password" element={<h2 style={{color: '#6a1b9a'}}>Change Password Interface</h2>} />
-          <Route path="/profile" element={<h2 style={{color: '#6a1b9a'}}>My Profile Interface</h2>} />
+          <Route path="/reports" element={<ReportGeneration />} />
+          <Route path="/password" element={<ChangePassword />} />
         </Routes>
       </div>
     </div>

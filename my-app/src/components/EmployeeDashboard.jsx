@@ -1,93 +1,72 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const EmployeeDashboard = () => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('My Attendance');
+  
+  // Decide which screen to show based on URL routing logic handled from the sidebar mappings
+  const isProfileView = window.location.pathname.includes('/profile');
+  
+  // Hardcoded constants mirroring the screenshots accurately
+  const todayDateStr = "Wednesday, April 29, 2026"; 
 
-  // Hardcode current layout to match the screenshot EXACTLY.
-  // The screenshot shows: Welcome, Alemnesh Kassahun! Sunday, May 18, 2025
-  const todayDateStr = "Sunday, May 18, 2025"; 
+  // Basic mock profile
+  const employeeData = {
+     employee_id: user?.name ? 'E001' : 'E0019',
+     name: user?.name || 'kebe Abuch',
+     date_of_birth: '2026-01-04',
+     phone: '0978652468',
+     department: 'Management',
+     position: 'Cleaner',
+     join_date: '2026-01-04',
+     education: 'High School',
+     salary: '67880.00'
+  };
 
   return (
     <div style={{ padding: '0px', height: '100%', position: 'relative' }}>
       
-      <div style={{ textAlign: 'center', marginTop: '40px', marginBottom: '20px' }}>
-         <h2 style={{ color: '#6a1b9a', fontWeight: 'bold' }}>Welcome, {user?.name || 'Alemnesh Kassahun'}!</h2>
-         <p style={{ color: '#666', fontSize: '13px' }}>{todayDateStr}</p>
-      </div>
+      {!isProfileView ? (
+          <div style={{ textAlign: 'center', marginTop: '40px', marginBottom: '20px' }}>
+             <h2 style={{ color: 'var(--green-900)', fontWeight: 'bold' }}>Welcome, {employeeData.name}!</h2>
+             <p style={{ color: 'var(--text-primary)', fontSize: '13px' }}>{todayDateStr}</p>
 
-      <div style={{ padding: '0 40px' }}>
-          <div style={{ display: 'flex', borderBottom: '2px solid #e0e0e0', backgroundColor: '#e0e0e0', padding: '5px 5px 0 5px' }}>
-              <div 
-                 onClick={() => setActiveTab('My Attendance')}
-                 style={{ 
-                    padding: '8px 15px', fontSize: '13px', cursor: 'pointer',
-                    backgroundColor: activeTab === 'My Attendance' ? 'white' : 'transparent',
-                    borderTopLeftRadius: '5px', borderTopRightRadius: '5px',
-                    color: activeTab === 'My Attendance' ? '#6a1b9a' : '#555',
-                    border: activeTab === 'My Attendance' ? '1px solid #ccc' : 'none', borderBottom: 'none'
-                 }}>
-                 My Attendance
-              </div>
-              <div 
-                 onClick={() => setActiveTab('My Leave Records')}
-                 style={{ 
-                    padding: '8px 15px', fontSize: '13px', cursor: 'pointer',
-                    backgroundColor: activeTab === 'My Leave Records' ? 'white' : 'transparent',
-                    borderTopLeftRadius: '5px', borderTopRightRadius: '5px',
-                    color: activeTab === 'My Leave Records' ? '#6a1b9a' : '#555',
-                    border: activeTab === 'My Leave Records' ? '1px solid #ccc' : 'none', borderBottom: 'none'
-                 }}>
-                 My Leave Records
-              </div>
-          </div>
-
-          {activeTab === 'My Attendance' && (
-              <div style={{ textAlign: 'center', marginTop: '60px' }}>
-                 <h4 style={{ color: '#333' }}>Daily Attendance</h4>
-                 <button disabled style={{ padding: '10px 40px', backgroundColor: '#c8e6c9', border: 'none', borderRadius: '5px', fontSize: '14px', color: '#388e3c', cursor: 'not-allowed', marginTop: '15px' }}>
-                     Punch In Today
-                 </button>
-                 <p style={{ fontSize: '12px', color: '#6a1b9a', marginTop: '10px' }}>You've already punched in today</p>
-              </div>
-          )}
-
-          {activeTab === 'My Leave Records' && (
-              <div style={{ marginTop: '30px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
-                       <div style={{ backgroundColor: '#fff3e0', padding: '15px 30px', borderRadius: '10px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '12px', color: '#555' }}>Leave Days Taken</div>
-                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffb300', marginTop: '5px' }}>2</div>
-                       </div>
-                       <div style={{ backgroundColor: '#e3f2fd', padding: '15px 30px', borderRadius: '10px', textAlign: 'center' }}>
-                            <div style={{ fontSize: '12px', color: '#555' }}>Leave Days Remaining</div>
-                            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#42a5f5', marginTop: '5px' }}>18</div>
-                       </div>
+             {/* Metrics Cards */}
+             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px' }}>
+                  <div style={{ backgroundColor: '#e8f5e9', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
+                       <div style={{ fontSize: '12px', color: '#555' }}>Present Days</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4caf50', marginTop: '5px' }}>0</div>
                   </div>
+                  <div style={{ backgroundColor: '#ffebee', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
+                       <div style={{ fontSize: '12px', color: '#555' }}>Absent Days</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f44336', marginTop: '5px' }}>0</div>
+                  </div>
+                  <div style={{ backgroundColor: '#e3f2fd', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
+                       <div style={{ fontSize: '12px', color: '#555' }}>Leave Days</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2196f3', marginTop: '5px' }}>0</div>
+                  </div>
+             </div>
+          </div>
+      ) : (
+          <div style={{ padding: '40px 60px' }}>
+             <h3 style={{ color: 'var(--green-900)', borderBottom: '1px solid var(--green-300)', paddingBottom: '10px' }}>Personal Information</h3>
+             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '10px', fontSize: '14px', marginBottom: '40px', marginTop: '20px', color: 'var(--text-primary)' }}>
+                 <strong style={{color: 'var(--green-900)'}}>Employee ID:</strong> <span>{employeeData.employee_id}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Name:</strong> <span>{employeeData.name}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Date of Birth:</strong> <span>{employeeData.date_of_birth}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Phone:</strong> <span>{employeeData.phone}</span>
+             </div>
 
-                  <h5 style={{ color: '#4a148c', marginBottom: '10px' }}>Recent Leave Records</h5>
-                  <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse', fontSize: '13px' }}>
-                       <thead>
-                           <tr style={{ backgroundColor: '#eeeeee', color: '#333' }}>
-                               <th style={{ padding: '8px', borderRight: '1px solid #ddd' }}>Date</th>
-                               <th style={{ padding: '8px' }}>Reason</th>
-                           </tr>
-                       </thead>
-                       <tbody>
-                           <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                               <td style={{ padding: '8px', borderRight: '1px solid #ddd' }}>2025-05-18</td>
-                               <td style={{ padding: '8px' }}>sick</td>
-                           </tr>
-                           <tr style={{ borderBottom: '1px solid #f0f0f0' }}>
-                               <td style={{ padding: '8px', borderRight: '1px solid #ddd' }}>2025-05-17</td>
-                               <td style={{ padding: '8px' }}>sick</td>
-                           </tr>
-                       </tbody>
-                   </table>
-              </div>
-          )}
-      </div>
+             <h3 style={{ color: 'var(--green-900)', borderBottom: '1px solid var(--green-300)', paddingBottom: '10px' }}>Employment Information</h3>
+             <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '10px', fontSize: '14px', marginTop: '20px', color: 'var(--text-primary)' }}>
+                 <strong style={{color: 'var(--green-900)'}}>Department:</strong> <span>{employeeData.department}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Position:</strong> <span>{employeeData.position}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Join Date:</strong> <span>{employeeData.join_date}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Education:</strong> <span>{employeeData.education}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Salary:</strong> <span>{employeeData.salary}</span>
+             </div>
+          </div>
+      )}
 
     </div>
   );
