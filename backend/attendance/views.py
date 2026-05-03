@@ -1,5 +1,6 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
+from leave.models import LeaveRecord
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.pagination import PageNumberPagination
@@ -74,15 +75,21 @@ def punch_in_view(request):
     if not employee_id:
         return Response({'error': 'employee_id is required'}, status=status.HTTP_400_BAD_REQUEST)
     today = timezone.now().date()
+    
+    # Check if on leave
+    is_on_leave = LeaveRecord.objects.filter(employee_id=employee_id, leave_date=today).exists()
+    if is_on_leave:
+        return Response({'message': 'You are on leave', 'status': 'leave'}, status=status.HTTP_400_BAD_REQUEST)
+
     existing = Attendance.objects.filter(employee_id=employee_id, attendance_date=today).first()
     if existing:
         return Response(
-            {'message': 'Already punched in today', 'attendance': {'attendance_id': existing.attendance_id, 'employee_id': employee_id, 'attendance_date': today}},
-            status=status.HTTP_200_OK
+            {'message': 'Already punched in today', 'status': 'already_punched'},
+            status=status.HTTP_400_BAD_REQUEST
         )
     row = Attendance.objects.create(employee_id=employee_id, attendance_date=today)
     return Response(
-        {'message': 'Punched in successfully', 'attendance': {'attendance_id': row.attendance_id, 'employee_id': employee_id, 'attendance_date': today}},
+        {'message': 'Punched in successfully', 'status': 'success', 'attendance': {'attendance_id': row.attendance_id, 'employee_id': employee_id, 'attendance_date': today}},
         status=status.HTTP_200_OK
     )
 
@@ -102,7 +109,72 @@ def daily_attendance_view(request):
 
 @api_view(['POST'])
 def attendance_report_view(request):
-    return Response({'report_data': [], 'summary': {'total_records': 0}})
+    employee_id = request.data.get('employee_id')
+    from_date_str = request.data.get('from_date')
+    to_date_str = request.data.get('to_date')
+    
+    if not employee_id or not from_date_str or not to_date_str:
+        return Response({'error': 'employee_id, from_date, and to_date are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    try:
+        from_date = datetime.strptime(from_date_str, '%Y-%m-%d').date()
+        to_date = datetime.strptime(to_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return Response({'error': 'Invalid date format. Use YYYY-MM-DD.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    if from_date > to_date:
+        return Response({'error': 'from_date cannot be after to_date'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    attendances = Attendance.objects.filter(employee_id=employee_id, attendance_date__range=[from_date, to_date])
+    present_dates = {a.attendance_date for a in attendances}
+    
+    leaves = LeaveRecord.objects.filter(employee_id=employee_id, leave_date__range=[from_date, to_date])
+    leave_dates = {l.leave_date for l in leaves}
+    
+    report_data = []
+    current_date = from_date
+    while current_date <= to_date:
+        if current_date in present_dates:
+            status_str = 'Present'
+        elif current_date in leave_dates:
+            status_str = 'Leave'
+        else:
+            status_str = 'Absent'
+            
+        report_data.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'status': status_str
+        })
+        current_date += timedelta(days=1)
+        
+    return Response({'report_data': report_data})
+
+@api_view(['GET'])
+def employee_stats_view(request):
+    employee_id = request.GET.get('employee_id')
+    if not employee_id:
+        return Response({'error': 'employee_id required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+    # Get all time stats for simplicity
+    present = Attendance.objects.filter(employee_id=employee_id).count()
+    leave = LeaveRecord.objects.filter(employee_id=employee_id).count()
+    
+    # Calculate absent days by assuming the employee should be present every weekday since join date? 
+    # That might be too complex for now, we can just return 0 or calculate from the start of the year.
+    # Let's just return present and leave, and absent as 0 for now to keep it simple, or calculate it.
+    
+    # To calculate absent, let's just find the first punch in, and count days till today.
+    first_punch = Attendance.objects.filter(employee_id=employee_id).order_by('attendance_date').first()
+    absent = 0
+    if first_punch:
+        total_days = (timezone.now().date() - first_punch.attendance_date).days + 1
+        absent = max(0, total_days - present - leave)
+        
+    return Response({
+        'present': present,
+        'absent': absent,
+        'leave': leave
+    })
 
 
 @api_view(['GET'])

@@ -50,3 +50,25 @@ def login_view(request):
         },
         status=200,
     )
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def change_password_view(request):
+    username = request.data.get("username")
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
+    
+    if not username or not old_password or not new_password:
+        return Response({"error": "Missing fields"}, status=400)
+        
+    try:
+        employee = Employee.objects.get(id=username)
+    except Employee.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)
+        
+    if employee.password != old_password:
+        return Response({"error": "Incorrect old password"}, status=400)
+        
+    employee.password = new_password
+    employee.save(update_fields=['password'])
+    return Response({"message": "Password updated successfully"}, status=200)

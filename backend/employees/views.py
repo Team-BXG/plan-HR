@@ -21,7 +21,7 @@ class EmployeePagination(PageNumberPagination):
 def employee_list_view(request):
     """Get list of employees"""
     search = request.GET.get('search', '')
-    employees = Employee.objects.all().order_by('name')
+    employees = Employee.objects.filter(is_active=True).order_by('name')
     if search:
         employees = employees.filter(Q(id__icontains=search) | Q(name__icontains=search))
     
@@ -88,8 +88,9 @@ def employee_delete_view(request, employee_id):
         employee = Employee.objects.get(id=employee_id)
     except Employee.DoesNotExist:
         return Response({'error': 'Employee not found'}, status=status.HTTP_404_NOT_FOUND)
-    employee.delete()
-    return Response({'message': 'Employee deleted successfully'})
+    employee.is_active = False
+    employee.save(update_fields=['is_active'])
+    return Response({'message': 'Employee deactivated successfully'})
 
 
 @api_view(['GET'])

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
 const EmployeeDashboard = () => {
@@ -7,21 +8,43 @@ const EmployeeDashboard = () => {
   // Decide which screen to show based on URL routing logic handled from the sidebar mappings
   const isProfileView = window.location.pathname.includes('/profile');
   
-  // Hardcoded constants mirroring the screenshots accurately
-  const todayDateStr = "Wednesday, April 29, 2026"; 
+  // Dynamic date showing today
+  const todayDateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }); 
 
-  // Basic mock profile
-  const employeeData = {
-     employee_id: user?.name ? 'E001' : 'E0019',
-     name: user?.name || 'kebe Abuch',
-     date_of_birth: '2026-01-04',
-     phone: '0978652468',
-     department: 'Management',
-     position: 'Cleaner',
-     join_date: '2026-01-04',
-     education: 'High School',
-     salary: '67880.00'
-  };
+  const [employeeData, setEmployeeData] = useState(null);
+  const [stats, setStats] = useState({ present: 0, absent: 0, leave: 0 });
+
+  useEffect(() => {
+    const fetchData = async () => {
+       try {
+          const empId = user?.employee_id || (user?.name === 'admin' ? 'E001' : 'E011');
+          
+          const empResp = await axios.get(`http://localhost:8000/api/employees/${empId}/`);
+          setEmployeeData(empResp.data);
+
+          const statsResp = await axios.get(`http://localhost:8000/api/attendance/employee-stats/?employee_id=${empId}`);
+          setStats(statsResp.data);
+       } catch (e) {
+          console.error("Error fetching dashboard data", e);
+          // Fallback if failed
+          setEmployeeData({
+             employee_id: user?.employee_id || 'E001',
+             name: user?.name || 'kebe Abuch',
+             date_of_birth: '2026-01-04',
+             phone_number: '0978652468',
+             department: 'Management',
+             position: 'Cleaner',
+             join_date: '2026-01-04',
+             education: 'High School',
+             salary: '67880.00'
+          });
+       }
+    };
+    fetchData();
+  }, [user]);
+
+  if (!employeeData) return <div style={{padding: '20px'}}>Loading...</div>;
+
 
   return (
     <div style={{ padding: '0px', height: '100%', position: 'relative' }}>
@@ -35,15 +58,15 @@ const EmployeeDashboard = () => {
              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '40px' }}>
                   <div style={{ backgroundColor: '#e8f5e9', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
                        <div style={{ fontSize: '12px', color: '#555' }}>Present Days</div>
-                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4caf50', marginTop: '5px' }}>0</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#4caf50', marginTop: '5px' }}>{stats.present}</div>
                   </div>
                   <div style={{ backgroundColor: '#ffebee', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
                        <div style={{ fontSize: '12px', color: '#555' }}>Absent Days</div>
-                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f44336', marginTop: '5px' }}>0</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#f44336', marginTop: '5px' }}>{stats.absent}</div>
                   </div>
                   <div style={{ backgroundColor: '#e3f2fd', padding: '15px 30px', borderRadius: '10px', textAlign: 'center', width: '120px' }}>
                        <div style={{ fontSize: '12px', color: '#555' }}>Leave Days</div>
-                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2196f3', marginTop: '5px' }}>0</div>
+                       <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#2196f3', marginTop: '5px' }}>{stats.leave}</div>
                   </div>
              </div>
           </div>
@@ -54,7 +77,7 @@ const EmployeeDashboard = () => {
                  <strong style={{color: 'var(--green-900)'}}>Employee ID:</strong> <span>{employeeData.employee_id}</span>
                  <strong style={{color: 'var(--green-900)'}}>Name:</strong> <span>{employeeData.name}</span>
                  <strong style={{color: 'var(--green-900)'}}>Date of Birth:</strong> <span>{employeeData.date_of_birth}</span>
-                 <strong style={{color: 'var(--green-900)'}}>Phone:</strong> <span>{employeeData.phone}</span>
+                 <strong style={{color: 'var(--green-900)'}}>Phone:</strong> <span>{employeeData.phone_number || employeeData.phone}</span>
              </div>
 
              <h3 style={{ color: 'var(--green-900)', borderBottom: '1px solid var(--green-300)', paddingBottom: '10px' }}>Employment Information</h3>

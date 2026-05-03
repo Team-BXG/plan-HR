@@ -1,7 +1,8 @@
 from django.contrib.auth import authenticate
 from django.utils import timezone
 from datetime import timedelta
-from .models import User, Role
+from .models import User
+from employees.models import Role
 from employees.services import EmployeeService
 from attendance.services import AttendanceService
 from leave.services import LeaveService
@@ -19,7 +20,7 @@ class AuthenticationService:
                 role = getattr(user, 'role', 'Employee')
                 if not role:
                     # Check role table
-                    user_role = Role.objects.filter(user=user, is_active=True).first()
+                    user_role = Role.objects.filter(employee_id=user.employee_id, is_active=True).first()
                     role = user_role.role if user_role else 'Employee'
                 
                 return {
@@ -39,7 +40,7 @@ class AuthenticationService:
                 return user.role
             
             # Then check role table
-            user_role = Role.objects.filter(user=user, is_active=True).first()
+            user_role = Role.objects.filter(employee_id=user.employee_id, is_active=True).first()
             return user_role.role if user_role else 'Employee'
         except:
             return 'Employee'

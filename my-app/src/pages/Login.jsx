@@ -33,8 +33,17 @@ const Login = () => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-      <div className="glass-panel" style={{ padding: '40px', width: '340px', textAlign: 'center' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', position: 'relative' }}>
+      {/* Watermark Blur Effect overlaying the background image */}
+      <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          backdropFilter: 'blur(3px)',
+          zIndex: 0
+      }}></div>
+      
+      <div className="glass-panel" style={{ padding: '40px', width: '340px', textAlign: 'center', zIndex: 1 }}>
         <div style={{ marginBottom: '20px' }}>
           <img src={logo} alt="Company Logo" style={{ maxWidth: '80px', height: '80px', objectFit: 'cover', borderRadius: '50%' }} />
         </div>

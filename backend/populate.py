@@ -15,32 +15,19 @@ def run():
     print("Flushing database...")
     with connection.cursor() as cursor:
         try:
-            cursor.execute("ALTER TABLE departments ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;")
-        except Exception:
-            pass
-        try:
-            cursor.execute("ALTER TABLE departments ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;")
-        except Exception:
-            pass
-        
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-        
-        try:
             Employee.objects.all().delete()
         except Exception as e:
-            print(f"Failed to delete Employee: {e}")
+            pass
             
         try:
             Department.objects.all().delete()
         except Exception as e:
-            print(f"Failed to delete Department: {e}")
+            pass
             
         try:
             Role.objects.all().delete()
         except Exception as e:
-            print(f"Failed to delete Role: {e}")
-        
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+            pass
 
     print("Adding Departments...")
     depts = [

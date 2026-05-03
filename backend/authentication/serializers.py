@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User, Role
+from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -51,9 +51,4 @@ class ChangePasswordSerializer(serializers.Serializer):
         return attrs
 
 
-class RoleSerializer(serializers.ModelSerializer):
-    """Serializer for Role model"""
-    class Meta:
-        model = Role
-        fields = ['id', 'user', 'role', 'is_active', 'created_at']
-        read_only_fields = ['id', 'created_at']
+

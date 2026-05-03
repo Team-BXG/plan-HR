@@ -15,13 +15,12 @@ class Employee(models.Model):
     is_active = models.BooleanField(default=True, db_column='is_active')
 
     class Meta:
-        managed = False
         db_table = 'employees'
 
 class Role(models.Model):
     employee_id = models.CharField(max_length=50, primary_key=True)
     role = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
 
     class Meta:
-        managed = False
         db_table = 'roles'

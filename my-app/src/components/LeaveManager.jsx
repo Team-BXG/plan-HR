@@ -1,27 +1,65 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
 const LeaveManager = () => {
     const [showNoRecords, setShowNoRecords] = useState(false);
     const isGenerate = window.location.pathname.includes('/leave/generate');
 
-    const employees = [
-        "E001 - Abebe Kebede",
-        "E011 - Abraham Kebede",
-        "E004 - Alemnesh Kassahune",
-        "E009 - beza dememe",
-        "E005 - Dawit Solomon",
-        "E008 - Deborah Habtu",
-        "E014 - Genet Tesafye",
-        "E007 - Hermela Belay",
-        "E0019 - kebe Abuch",
-        "E013 - Mahilet Tesfaye",
-        "E003 - Mekonnen Alemu",
-        "E006 - Tsion Habtu",
-        "E002 - Tigist Worku",
-        "E012 - Bemnet Worku",
-        "E0021 - yene deseee",
-        "E0020 - yuiiiiiii iiiiiiiiii"
-    ];
+    const [employees, setEmployees] = useState([]);
+    const [activeEmployee, setActiveEmployee] = useState('');
+
+    React.useEffect(() => {
+        const fetchEmployees = async () => {
+            try {
+                const resp = await axios.get('http://localhost:8000/api/employees/');
+                const emps = resp.data.results || resp.data;
+                setEmployees(emps);
+                if (emps.length > 0) setActiveEmployee(emps[0].id || emps[0].employee_id);
+            } catch (e) {
+                console.error("Failed to fetch employees", e);
+            }
+        };
+        fetchEmployees();
+    }, []);
+    const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
+    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+    const [reason, setReason] = useState('');
+    const [leaveRecords, setLeaveRecords] = useState([]);
+
+    const handleRegisterLeave = async () => {
+        if (!reason || !activeEmployee) return alert('Fill out all fields');
+        try {
+            await axios.post('http://localhost:8000/api/leave/records/apply/', {
+                employee_id: activeEmployee,
+                start_date: fromDate,
+                end_date: toDate,
+                reason: reason
+            });
+            alert('Leave registered successfully!');
+            setReason('');
+        } catch (e) {
+            // Note: If they are already on leave, tell them that at the bottom text.
+            const errMsg = e.response?.data?.message || e.response?.data?.error || e.message;
+            alert('Failed to register leave: ' + errMsg);
+        }
+    };
+
+    const handleGenerateLeave = async () => {
+        try {
+            const resp = await axios.get(`http://localhost:8000/api/leave/records/?employee=${activeEmployee}&start_date=${fromDate}&end_date=${toDate}`);
+            const data = resp.data.results || resp.data;
+            if (data.length > 0) {
+                setLeaveRecords(data);
+                setShowNoRecords(false);
+            } else {
+                setLeaveRecords([]);
+                setShowNoRecords(true);
+            }
+        } catch (e) {
+            setLeaveRecords([]);
+            setShowNoRecords(true);
+        }
+    };
 
     return (
         <div style={{ padding: '20px', height: '100%', position: 'relative' }}>
@@ -34,37 +72,47 @@ const LeaveManager = () => {
 
                     <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <label style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Employee:</label>
-                        <select className="input-field" style={{ width: '250px', background: '#dcecdb' }}>
-                            {employees.map((emp, i) => (
-                                <option key={i} value={emp} style={{ padding: '4px' }}>{emp}</option>
-                            ))}
+                        <select className="input-field" value={activeEmployee} onChange={(e) => setActiveEmployee(e.target.value)} style={{ width: '250px', background: '#dcecdb' }}>
+                            {employees.map((emp) => {
+                                const empId = emp.id || emp.employee_id;
+                                return <option key={empId} value={empId} style={{ padding: '4px' }}>{empId} - {emp.name}</option>;
+                            })}
                         </select>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>From:</span>
-                            <input type="date" defaultValue="2026-03-12" className="input-field" style={{ padding: '4px 8px', width: '130px' }} />
+                            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field" style={{ padding: '4px 8px', width: '130px' }} />
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>To:</span>
-                            <input type="date" defaultValue="2026-04-09" className="input-field" style={{ padding: '4px 8px', width: '130px' }} />
+                            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field" style={{ padding: '4px 8px', width: '130px' }} />
                         </div>
-                        <button className="btn-primary" onClick={() => setShowNoRecords(true)} style={{ padding: '6px 15px', borderRadius: '4px' }}>Generate Leave Report</button>
+                        <button className="btn-primary" onClick={handleGenerateLeave} style={{ padding: '6px 15px', borderRadius: '4px' }}>Generate Leave Report</button>
                     </div>
 
                     <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
                         <table style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', fontSize: '13px' }}>
                             <thead>
                                 <tr style={{ backgroundColor: '#e0e0e0', color: '#555' }}>
-                                    <th style={{ padding: '10px' }}>Date</th>
+                                    <th style={{ padding: '10px' }}>Start Date</th>
+                                    <th style={{ padding: '10px' }}>End Date</th>
                                     <th style={{ padding: '10px' }}>Reason</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colSpan="2" style={{ padding: '40px', color: '#888' }}>No content in table</td>
-                                </tr>
+                                {leaveRecords.length > 0 ? leaveRecords.map((l, i) => (
+                                    <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '10px' }}>{l.start_date}</td>
+                                        <td>{l.end_date}</td>
+                                        <td>{l.reason}</td>
+                                    </tr>
+                                )) : (
+                                    <tr>
+                                        <td colSpan="3" style={{ padding: '40px', color: '#888' }}>No content in table</td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -98,25 +146,26 @@ const LeaveManager = () => {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '5px' }}>Employee:</label>
-                            <select className="input-field" style={{ width: '250px' }}>
-                                {employees.map((emp, i) => (
-                                    <option key={i} value={emp}>{emp}</option>
-                                ))}
+                            <select className="input-field" value={activeEmployee} onChange={(e) => setActiveEmployee(e.target.value)} style={{ width: '250px' }}>
+                                {employees.map((emp) => {
+                                    const empId = emp.id || emp.employee_id;
+                                    return <option key={empId} value={empId}>{empId} - {emp.name}</option>;
+                                })}
                             </select>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '5px' }}>From:</label>
-                            <input className="input-field" type="date" defaultValue="2026-04-26" style={{ width: '160px' }} />
+                            <input className="input-field" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ width: '160px' }} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '5px' }}>To:</label>
-                            <input className="input-field" type="date" defaultValue="2026-04-27" style={{ width: '160px' }} />
+                            <input className="input-field" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ width: '160px' }} />
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <label style={{ fontSize: '13px', color: 'var(--text-primary)', marginBottom: '5px' }}>Reason:</label>
-                            <textarea className="input-field" placeholder="Leave reason..." style={{ height: '120px', width: '100%', resize: 'none' }}></textarea>
+                            <textarea className="input-field" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Leave reason..." style={{ height: '120px', width: '100%', resize: 'none' }}></textarea>
                         </div>
-                        <button className="btn-primary" style={{ padding: '8px 20px', width: 'fit-content', borderRadius: '4px' }}>Register Leave</button>
+                        <button className="btn-primary" onClick={handleRegisterLeave} style={{ padding: '8px 20px', width: 'fit-content', borderRadius: '4px' }}>Register Leave</button>
                     </div>
                 </div>
             )}

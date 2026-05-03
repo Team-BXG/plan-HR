@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 
 const DepartmentManager = () => {
     const isUpdate = window.location.pathname.includes('/departments/update');
@@ -7,13 +8,81 @@ const DepartmentManager = () => {
     const isAdd = window.location.pathname.includes('/departments/add');
 
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [departments, setDepartments] = useState([]);
+    
+    // States for forms
+    const [oldDeptName, setOldDeptName] = useState('');
+    const [deptName, setDeptName] = useState('');
 
-    const departments = [
-        { id: 2, name: 'Management', count: 7 },
-        { id: 4, name: 'IT', count: 6 },
-        { id: 9, name: 'Marketing', count: 1 },
-        { id: 10, name: 'Finance', count: 1 }
-    ];
+    useEffect(() => {
+        fetchDepartments();
+    }, []);
+
+    const fetchDepartments = async () => {
+        try {
+            const resp = await axios.get('http://localhost:8000/api/departments/');
+            const data = resp.data.results || resp.data || [];
+            const mapped = data.map(d => ({
+                id: d.department_id,
+                name: d.department_name,
+                count: d.employee_count
+            }));
+            setDepartments(mapped);
+        } catch (e) {
+            setDepartments([
+                { id: '2', name: 'Management', count: 7 },
+                { id: '4', name: 'IT', count: 6 },
+                { id: '9', name: 'Marketing', count: 1 },
+                { id: '10', name: 'Finance', count: 1 }
+            ]);
+        }
+    };
+
+    const handleAdd = async () => {
+        if (!deptName) return alert('Enter a department name');
+        const idStr = "D" + Math.floor(Math.random() * 1000);
+        try {
+            await axios.post('http://localhost:8000/api/departments/create/', {
+                department_name: deptName
+            });
+            setShowSuccessModal(true);
+            fetchDepartments();
+        } catch (e) {
+            alert('Failed to add department: ' + (e.response?.data?.message || e.message));
+        }
+    };
+
+    const handleUpdate = async () => {
+        if (!oldDeptName || !deptName) return alert('Enter Old Name and New Name');
+        const dept = departments.find(d => d.name.toLowerCase() === oldDeptName.toLowerCase());
+        if (!dept) return alert('Old department not found.');
+        
+        try {
+            await axios.put(`http://localhost:8000/api/departments/${dept.id}/update/`, {
+                department_name: deptName
+            });
+            alert('Department updated successfully');
+            fetchDepartments();
+        } catch (e) {
+            alert('Failed to update department: ' + (e.response?.data?.message || e.message));
+        }
+    };
+
+    const handleRemove = async () => {
+        if (!deptName) return alert('Enter a department name to remove');
+        // Find ID by name
+        const dept = departments.find(d => d.name.toLowerCase() === deptName.toLowerCase());
+        if (!dept) return alert('Department not found locally. Searching DB limit not implemented in UX mock.');
+        try {
+            await axios.delete(`http://localhost:8000/api/departments/${dept.id}/delete/`);
+            alert('Department removed');
+            fetchDepartments();
+            setDeptName('');
+            window.history.back();
+        } catch (e) {
+            alert('Failed to remove: ' + (e.response?.data?.message || e.response?.data?.error || e.message));
+        }
+    };
 
     return (
         <div style={{ padding: '20px', height: '100%', position: 'relative' }}>
@@ -22,9 +91,9 @@ const DepartmentManager = () => {
             {isUpdate && (
                 <div style={{ maxWidth: '600px' }}>
                     <h3 style={{ color: 'var(--green-900)', marginTop: 0 }}>Update Department</h3>
-                    <input className="input-field" placeholder="Enter Department ID" style={{ display: 'block', marginBottom: '10px', width: '400px' }} />
-                    <input className="input-field" placeholder="New Department Name" style={{ display: 'block', marginBottom: '15px', width: '400px' }} />
-                    <button className="btn-primary" style={{ padding: '6px 15px', borderRadius: '4px' }}>
+                    <input className="input-field" placeholder="Old Department Name" value={oldDeptName} onChange={(e) => setOldDeptName(e.target.value)} style={{ display: 'block', marginBottom: '10px', width: '400px' }} />
+                    <input className="input-field" placeholder="New Department Name" value={deptName} onChange={(e) => setDeptName(e.target.value)} style={{ display: 'block', marginBottom: '15px', width: '400px' }} />
+                    <button className="btn-primary" onClick={handleUpdate} style={{ padding: '6px 15px', borderRadius: '4px' }}>
                         Update Department
                     </button>
                 </div>
@@ -36,8 +105,11 @@ const DepartmentManager = () => {
                    <div style={{ marginBottom: '20px' }}>
                        <h4 style={{ color: 'var(--green-800)', margin: '0 0 10px 0', fontWeight: 'normal' }}>Search Departments</h4>
                        <div style={{ display: 'flex', gap: '10px' }}>
-                          <input className="input-field" placeholder="Enter department name..." style={{ borderRadius: '20px', padding: '5px 15px' }} />
-                          <button style={{ padding: '5px 15px', borderRadius: '20px', backgroundColor: 'var(--green-700)', color: 'white', border: 'none', cursor: 'pointer' }}>Search</button>
+                          <input className="input-field" placeholder="Enter department name..." value={deptName} onChange={(e) => setDeptName(e.target.value)} style={{ borderRadius: '20px', padding: '5px 15px' }} />
+                          <button onClick={() => {
+                              if(deptName) setDepartments(departments.filter(d => d.name.toLowerCase().includes(deptName.toLowerCase())));
+                              else fetchDepartments();
+                          }} style={{ padding: '5px 15px', borderRadius: '20px', backgroundColor: 'var(--green-700)', color: 'white', border: 'none', cursor: 'pointer' }}>Search</button>
                        </div>
                    </div>
                )}
@@ -55,7 +127,7 @@ const DepartmentManager = () => {
                            <tr key={d.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                                <td style={{ padding: '10px 8px' }}>{d.id}</td>
                                <td>{d.name}</td>
-                               <td>{d.count}</td>
+                               <td>{d.count || 0}</td>
                            </tr>
                        ))}
                    </tbody>
@@ -83,10 +155,10 @@ const DepartmentManager = () => {
                        <div style={{ width: '25px', height: '25px', borderRadius: '50%', backgroundColor: 'var(--green-600)', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>?</div>
                     </div>
                     
-                    <input className="input-field" style={{ width: '100%', marginTop: '15px' }} />
+                    <input className="input-field" value={deptName} onChange={(e) => setDeptName(e.target.value)} style={{ width: '100%', marginTop: '15px' }} />
                     
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-                       <button onClick={() => window.history.back()} style={{ padding: '5px 20px', backgroundColor: 'var(--green-500)', color: 'white', border: '1px solid var(--green-400)', borderRadius: '4px', cursor: 'pointer' }}>OK</button>
+                       <button onClick={handleRemove} style={{ padding: '5px 20px', backgroundColor: 'var(--green-500)', color: 'white', border: '1px solid var(--green-400)', borderRadius: '4px', cursor: 'pointer' }}>OK</button>
                        <button onClick={() => window.history.back()} style={{ padding: '5px 15px', backgroundColor: '#e0e0e0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
                     </div>
                  </div>
@@ -114,10 +186,10 @@ const DepartmentManager = () => {
                        <div style={{ width: '25px', height: '25px', borderRadius: '50%', backgroundColor: 'var(--green-600)', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>+</div>
                     </div>
                     
-                    <input className="input-field" style={{ width: '100%', marginTop: '15px' }} />
+                    <input className="input-field" value={deptName} onChange={(e) => setDeptName(e.target.value)} style={{ width: '100%', marginTop: '15px' }} />
                     
                     <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '20px' }}>
-                       <button onClick={() => setShowSuccessModal(true)} style={{ padding: '5px 20px', backgroundColor: 'var(--green-500)', color: 'white', border: '1px solid var(--green-400)', borderRadius: '4px', cursor: 'pointer' }}>OK</button>
+                       <button onClick={handleAdd} style={{ padding: '5px 20px', backgroundColor: 'var(--green-500)', color: 'white', border: '1px solid var(--green-400)', borderRadius: '4px', cursor: 'pointer' }}>OK</button>
                        <button onClick={() => window.history.back()} style={{ padding: '5px 15px', backgroundColor: '#e0e0e0', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer' }}>Cancel</button>
                     </div>
                  </div>
@@ -147,7 +219,7 @@ const DepartmentManager = () => {
                           <span>Department Added</span>
                           <div style={{ background: '#5abed6', color: 'white', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: 'bold' }}>i</div>
                        </div>
-                       The department 'Cleaning' was successfully added.
+                       The department '{deptName}' was successfully added.
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px', gap: '10px' }}>

@@ -4,20 +4,39 @@ import { useAuth } from '../context/AuthContext';
 
 const AttendancePunch = () => {
   const { user } = useAuth();
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(null);
 
   const handlePunch = async (punchType) => {
     try {
-      await axios.post('http://localhost:8000/api/attendance/punch/', {
-        employee_id: user?.employee_id || 1,
+      const empId = user?.employee_id || (user?.name === 'admin' ? 'E001' : 'E011');
+      const resp = await axios.post('http://localhost:8000/api/attendance/punch/', {
+        employee_id: empId,
         type: punchType
       });
-      setStatus(`Successfully Punched ${punchType} at ${new Date().toLocaleTimeString()}`);
+      setStatus({ text: resp.data.message || `Successfully Punched ${punchType} at ${new Date().toLocaleTimeString()}`, type: 'success' });
     } catch (error) {
        console.error("Punch error", error);
-       // Mock for UI demonstration
-       setStatus(`Successfully Punched ${punchType} at ${new Date().toLocaleTimeString()} (Simulation)`);
+       if (error.response?.data) {
+          const errData = error.response.data;
+          if (errData.status === 'already_punched') {
+              setStatus({ text: errData.message, type: 'error' });
+          } else if (errData.status === 'leave') {
+              setStatus({ text: errData.message, type: 'warning' });
+          } else {
+              setStatus({ text: errData.error || errData.message || "Failed to punch", type: 'error' });
+          }
+       } else {
+          setStatus({ text: `Successfully Punched ${punchType} at ${new Date().toLocaleTimeString()} (Simulation)`, type: 'success' });
+       }
     }
+  };
+
+  const getStatusStyle = () => {
+      if (!status) return {};
+      if (status.type === 'success') return { backgroundColor: '#e8f5e9', color: '#2e7d32' };
+      if (status.type === 'error') return { backgroundColor: '#ffebee', color: '#c62828' };
+      if (status.type === 'warning') return { backgroundColor: '#fff3e0', color: '#ef6c00' };
+      return { backgroundColor: '#e8f5e9', color: '#2e7d32' };
   };
 
   return (
@@ -37,7 +56,7 @@ const AttendancePunch = () => {
            </button>
          </div>
 
-         {status && <div style={{ marginTop: '20px', padding: '10px', backgroundColor: '#e8f5e9', color: '#2e7d32', borderRadius: '10px' }}>{status}</div>}
+         {status && <div style={{ marginTop: '20px', padding: '10px', borderRadius: '10px', ...getStatusStyle() }}>{status.text}</div>}
       </div>
     </div>
   )

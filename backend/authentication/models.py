@@ -35,17 +35,4 @@ class User(AbstractUser):
         return f"{self.username} ({self.employee_id})"
 
 
-class Role(models.Model):
-    """Role model for managing user roles separately"""
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_roles')
-    role = models.CharField(max_length=20, choices=User.ROLE_CHOICES)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        db_table = 'roles'
-        unique_together = ['user', 'role']
-        app_label = 'authentication'
-    
-    def __str__(self):
-        return f"{self.user.username} - {self.role}"
+

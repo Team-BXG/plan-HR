@@ -8,6 +8,7 @@ urlpatterns = [
     path('daily/', views.daily_attendance_view, name='daily_attendance'),
     path('report/', views.attendance_report_view, name='attendance_report'),
     path('summary/', views.attendance_summary_view, name='attendance_summary'),
+    path('employee-stats/', views.employee_stats_view, name='employee_stats'),
     path('today/', views.today_attendance_view, name='today_attendance'),
     path('<int:attendance_id>/', views.attendance_detail_view, name='attendance_detail'),
     path('<int:attendance_id>/update/', views.attendance_update_view, name='attendance_update'),

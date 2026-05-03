@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const ChangePassword = () => {
+  const { user } = useAuth();
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       alert("Passwords do not match");
       return;
     }
-    alert("Password successfully changed!");
+    
+    try {
+      await axios.post('http://localhost:8000/api/login/change-password/', {
+          username: user.id || user.employee_id,
+          old_password: oldPassword,
+          new_password: newPassword
+      });
+      alert("Password successfully changed!");
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      alert("Failed to change password: " + (err.response?.data?.error || err.message));
+    }
   };
 
   return (
