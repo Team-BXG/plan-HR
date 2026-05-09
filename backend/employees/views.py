@@ -21,7 +21,12 @@ class EmployeePagination(PageNumberPagination):
 def employee_list_view(request):
     """Get list of employees"""
     search = request.GET.get('search', '')
+    department = request.GET.get('department', '')
     employees = Employee.objects.filter(is_active=True).order_by('name')
+    
+    if department:
+        employees = employees.filter(department=department)
+        
     if search:
         employees = employees.filter(Q(id__icontains=search) | Q(name__icontains=search))
     

@@ -11,12 +11,15 @@ class LeaveViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         employee_id = request.query_params.get('employee')
+        department = request.query_params.get('department')
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
         
         queryset = self.get_queryset()
         if employee_id:
             queryset = queryset.filter(employee_id=employee_id)
+        if department:
+            queryset = queryset.filter(employee__department=department)
         if start_date and end_date:
             queryset = queryset.filter(leave_date__range=[start_date, end_date])
             
@@ -25,12 +28,25 @@ class LeaveViewSet(viewsets.ModelViewSet):
         data = []
         for item in serializer.data:
             data.append({
+                'id': item['id'],
                 'employee': item['employee'],
+                'employee_name': item['employee_name'],
                 'start_date': item['leave_date'],
                 'end_date': item['leave_date'],
-                'reason': item['reason']
+                'reason': item['reason'],
+                'status': item.get('status', 'pending')
             })
         return Response(data)
+
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        leave_record = self.get_object()
+        status_val = request.data.get('status')
+        if status_val in ['pending', 'approved', 'rejected']:
+            leave_record.status = status_val
+            leave_record.save(update_fields=['status'])
+            return Response({'message': f'Leave status updated to {status_val}'})
+        return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def apply(self, request):

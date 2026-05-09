@@ -14,9 +14,14 @@ class AttendancePagination(PageNumberPagination):
 
 @api_view(['GET'])
 def attendance_list_view(request):
-    rows = Attendance.objects.all().order_by('-attendance_date')
+    department = request.GET.get('department')
+    queryset = Attendance.objects.all().order_by('-attendance_date')
+    
+    if department:
+        queryset = queryset.filter(employee__department=department)
+        
     paginator = AttendancePagination()
-    page = paginator.paginate_queryset(rows, request)
+    page = paginator.paginate_queryset(queryset, request)
     data = [
         {
             "attendance_id": row.attendance_id,

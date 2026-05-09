@@ -13,6 +13,8 @@ def _resolve_role(employee):
             return "Admin"
         if "hr" in (employee.position or "").lower():
             return "HR Manager"
+        if "manager" in (employee.position or "").lower():
+            return "Manager"
         return "Employee"
 
 

@@ -11,6 +11,10 @@ import ReportGeneration from '../components/ReportGeneration';
 import ChangePassword from './ChangePassword';
 import ManageInactive from '../components/ManageInactive';
 import GenerateAttendance from '../components/GenerateAttendance';
+import ManagerEmployeeDirectory from '../components/ManagerEmployeeDirectory';
+import ManagerAttendanceTracking from '../components/ManagerAttendanceTracking';
+import ManagerLeaveRequests from '../components/ManagerLeaveRequests';
+import ManagerReports from '../components/ManagerReports';
 import logo from '../assets/logo.webp';
 
 const Dashboard = () => {
@@ -97,6 +101,20 @@ const Dashboard = () => {
             </>
           )}
 
+          {/* Manager only */}
+          {user?.role === 'Manager' && (
+            <>
+              <div style={categoryStyle}><Users size={18}/> Manager Actions</div>
+              <div className="sidebar-sub">
+                <div className="nav-item-custom" onClick={() => navigate('/manager/dashboard')}><Users size={14}/> Dashboard</div>
+                <div className="nav-item-custom" onClick={() => navigate('/manager/employees')}><Search size={14}/> Employee Directory</div>
+                <div className="nav-item-custom" onClick={() => navigate('/manager/attendance')}><Clock size={14}/> Attendance Tracking</div>
+                <div className="nav-item-custom" onClick={() => navigate('/manager/leave')}><FilePlus size={14}/> Leave Requests</div>
+                <div className="nav-item-custom" onClick={() => navigate('/manager/reports')}><FileSpreadsheet size={14}/> Reports & Exports</div>
+              </div>
+            </>
+          )}
+
           {/* Employee only */}
           {user?.role === 'Employee' && (
             <>
@@ -129,7 +147,11 @@ const Dashboard = () => {
           <Route path="/attendance/*" element={<AttendancePunch />} />
           <Route path="/leave/*" element={<LeaveManager />} />
           <Route path="/reports" element={<ReportGeneration />} />
-          <Route path="/password" element={<ChangePassword />} />
+          <Route path="/manager/dashboard" element={<EmployeeDashboard />} />
+          <Route path="/manager/employees" element={<ManagerEmployeeDirectory />} />
+          <Route path="/manager/attendance" element={<ManagerAttendanceTracking />} />
+          <Route path="/manager/leave" element={<ManagerLeaveRequests />} />
+          <Route path="/manager/reports" element={<ManagerReports />} />
         </Routes>
       </div>
     </div>

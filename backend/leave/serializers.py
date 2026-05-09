@@ -14,4 +14,4 @@ class LeaveRecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LeaveRecord
-        fields = ['id', 'employee', 'employee_name', 'leave_date', 'reason']
+        fields = ['id', 'employee', 'employee_name', 'leave_date', 'reason', 'status']
