@@ -1,6 +1,0 @@
-SystemCheckError: System check identified some issues:
-
-ERRORS:
-roles: (models.E028) db_table 'roles' is used by multiple models: authentication.Role, employees.Role.
-
-System check identified 1 issue (0 silenced).
