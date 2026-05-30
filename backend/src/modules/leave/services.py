@@ -12,6 +12,14 @@ class LeaveService:
             employee=employee, year=year,
             defaults={'yearly_allowance': 20, 'used_days': 0}
         )
+        approved_count = LeaveRecord.objects.filter(
+            employee=employee,
+            leave_date__year=year,
+            status='approved'
+        ).count()
+        if balance.used_days != approved_count:
+            balance.used_days = approved_count
+            balance.save(update_fields=['used_days'])
         return balance
 
     @staticmethod
@@ -41,8 +49,20 @@ class LeaveService:
         # Check balance
         days_requested = len(dates_to_book)
         balance = LeaveService.get_leave_balance(employee_id_str, start_date.year)
-        if balance.used_days + days_requested > balance.yearly_allowance:
-            raise ValueError("Leave allowance exceeded for the year.")
+        
+        approved_count = LeaveRecord.objects.filter(
+            employee=employee,
+            leave_date__year=start_date.year,
+            status='approved'
+        ).count()
+        pending_count = LeaveRecord.objects.filter(
+            employee=employee,
+            leave_date__year=start_date.year,
+            status='pending'
+        ).count()
+        
+        if approved_count + pending_count + days_requested > balance.yearly_allowance:
+            raise ValueError("Leave allowance exceeded for the year (including pending requests).")
             
         # Create records
         records = []
@@ -50,11 +70,9 @@ class LeaveService:
             record = LeaveRecord.objects.create(
                 employee=employee,
                 leave_date=d,
-                reason=reason
+                reason=reason,
+                status='pending'
             )
             records.append(record)
             
-        balance.used_days += days_requested
-        balance.save()
-        
         return records

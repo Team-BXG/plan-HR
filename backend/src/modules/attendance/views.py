@@ -82,7 +82,7 @@ def punch_in_view(request):
     today = timezone.now().date()
     
     # Check if on leave
-    is_on_leave = LeaveRecord.objects.filter(employee_id=employee_id, leave_date=today).exists()
+    is_on_leave = LeaveRecord.objects.filter(employee_id=employee_id, leave_date=today, status='approved').exists()
     if is_on_leave:
         return Response({'message': 'You are on leave', 'status': 'leave'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -133,7 +133,7 @@ def attendance_report_view(request):
     attendances = Attendance.objects.filter(employee_id=employee_id, attendance_date__range=[from_date, to_date])
     present_dates = {a.attendance_date for a in attendances}
     
-    leaves = LeaveRecord.objects.filter(employee_id=employee_id, leave_date__range=[from_date, to_date])
+    leaves = LeaveRecord.objects.filter(employee_id=employee_id, leave_date__range=[from_date, to_date], status='approved')
     leave_dates = {l.leave_date for l in leaves}
     
     report_data = []
@@ -162,7 +162,7 @@ def employee_stats_view(request):
         
     # Get all time stats for simplicity
     present = Attendance.objects.filter(employee_id=employee_id).count()
-    leave = LeaveRecord.objects.filter(employee_id=employee_id).count()
+    leave = LeaveRecord.objects.filter(employee_id=employee_id, status='approved').count()
     
     # Calculate absent days by assuming the employee should be present every weekday since join date? 
     # That might be too complex for now, we can just return 0 or calculate from the start of the year.

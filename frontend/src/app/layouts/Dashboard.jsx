@@ -15,6 +15,7 @@ import ManagerEmployeeDirectory from '../../features/manager/ManagerEmployeeDire
 import ManagerAttendanceTracking from '../../features/manager/ManagerAttendanceTracking';
 import ManagerLeaveRequests from '../../features/manager/ManagerLeaveRequests';
 import ManagerReports from '../../features/manager/ManagerReports';
+import EmployeeLeaveRequest from '../../features/employee/EmployeeLeaveRequest';
 import logo from '../../assets/logo.webp';
 
 const Dashboard = () => {
@@ -24,6 +25,14 @@ const Dashboard = () => {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleDashboardRedirect = () => {
+    if (user?.role === 'Manager') {
+      navigate('/manager/dashboard');
+    } else {
+      navigate('/');
+    }
   };
 
   const categoryStyle = {
@@ -40,20 +49,29 @@ const Dashboard = () => {
     <div className="app-container">
       {/* Sidebar */}
       <div className="sidebar" style={{ width: '280px', padding: '15px', backgroundColor: 'var(--green-700)' }}>
-        <div style={{ marginBottom: '20px', textAlign: 'center' }}>
+        <div 
+          style={{ marginBottom: '20px', textAlign: 'center', cursor: 'pointer' }}
+          onClick={handleDashboardRedirect}
+          title="Go to Dashboard"
+        >
           <img src={logo} alt="Company Logo" style={{ maxWidth: '60px', height: '60px', objectFit: 'cover', borderRadius: '50%' }} />
         </div>
         <div style={{ paddingBottom: '15px', borderBottom: '1px solid var(--green-600)' }}>
-          <h2 style={{ margin: 0, color: 'var(--green-100)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px' }}>
-            <ShieldCheck /> {user?.role === 'Admin' ? 'Admin Dashboard' : user?.role === 'HR Manager' ? 'HR Manager Dashboard' : 'Employee Dashboard'}
+          <h2 
+            style={{ margin: 0, color: 'var(--green-100)', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '18px', cursor: 'pointer' }}
+            onClick={handleDashboardRedirect}
+            title="Go to Dashboard"
+          >
+            <ShieldCheck /> {user?.role === 'Admin' ? 'Admin Dashboard' : user?.role === 'HR Manager' ? 'HR Manager Dashboard' : user?.role === 'Manager' ? 'Manager Dashboard' : 'Employee Dashboard'}
           </h2>
         </div>
         
         <div style={{ flex: 1, overflowY: 'auto' }}>
-          {/* Change Password - All roles */}
-          <div style={categoryStyle}><Key size={18}/> Change Password</div>
+          {/* Personal - All roles */}
+          <div style={categoryStyle}><Key size={18}/> Personal</div>
           <div className="sidebar-sub">
-            <div className="nav-item-custom" onClick={() => navigate('/password')}>Change Password</div>
+            <div className="nav-item-custom" onClick={() => navigate('/password')}><Key size={14}/> Change Password</div>
+            <div className="nav-item-custom" onClick={() => navigate('/employee/leave-requests')}><FileText size={14}/> My Leave Requests</div>
           </div>
 
           {/* Admin only */}
@@ -153,6 +171,7 @@ const Dashboard = () => {
           <Route path="/manager/attendance" element={<ManagerAttendanceTracking />} />
           <Route path="/manager/leave" element={<ManagerLeaveRequests />} />
           <Route path="/manager/reports" element={<ManagerReports />} />
+          <Route path="/employee/leave-requests" element={<EmployeeLeaveRequest />} />
         </Routes>
       </div>
     </div>

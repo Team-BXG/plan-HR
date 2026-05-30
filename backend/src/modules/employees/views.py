@@ -30,6 +30,10 @@ def employee_list_view(request):
     if search:
         employees = employees.filter(Q(id__icontains=search) | Q(name__icontains=search))
     
+    if not request.GET.get('page'):
+        serializer = EmployeeSerializer(employees, many=True)
+        return Response(serializer.data)
+        
     # Paginate results
     paginator = EmployeePagination()
     paginated_employees = paginator.paginate_queryset(employees, request)
@@ -103,6 +107,10 @@ def inactive_employees_view(request):
     """Get list of inactive employees"""
     inactive_employees = Employee.objects.filter(is_active=False).order_by('name')
     
+    if not request.GET.get('page'):
+        serializer = InactiveEmployeeSerializer(inactive_employees, many=True)
+        return Response(serializer.data)
+        
     # Paginate results
     paginator = EmployeePagination()
     paginated_employees = paginator.paginate_queryset(inactive_employees, request)
@@ -137,6 +145,10 @@ def employee_search_view(request):
         if data.get('department'):
             employees = employees.filter(department=data['department'])
         
+        if not request.GET.get('page') and not request.data.get('page'):
+            employee_serializer = EmployeeSerializer(employees, many=True)
+            return Response(employee_serializer.data)
+            
         # Paginate results
         paginator = EmployeePagination()
         paginated_employees = paginator.paginate_queryset(employees, request)
@@ -161,6 +173,10 @@ def employee_filter_view(request):
         if data.get('gender') and data['gender'] != 'All':
             employees = employees.filter(sex=data['gender'])
         
+        if not request.GET.get('page') and not request.data.get('page'):
+            employee_serializer = EmployeeSerializer(employees, many=True)
+            return Response(employee_serializer.data)
+            
         # Paginate results
         paginator = EmployeePagination()
         paginated_employees = paginator.paginate_queryset(employees, request)

@@ -45,6 +45,7 @@ class LeaveViewSet(viewsets.ModelViewSet):
         if status_val in ['pending', 'approved', 'rejected']:
             leave_record.status = status_val
             leave_record.save(update_fields=['status'])
+            LeaveService.get_leave_balance(leave_record.employee_id, leave_record.leave_date.year)
             return Response({'message': f'Leave status updated to {status_val}'})
         return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
 

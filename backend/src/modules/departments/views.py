@@ -27,6 +27,10 @@ def department_list_view(request):
     else:
         departments = department_service.get_all_departments()
     
+    if not request.GET.get('page'):
+        serializer = DepartmentSerializer(departments, many=True)
+        return Response(serializer.data)
+
     # Paginate results
     paginator = DepartmentPagination()
     paginated_departments = paginator.paginate_queryset(departments, request)

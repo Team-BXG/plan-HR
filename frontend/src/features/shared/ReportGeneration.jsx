@@ -47,8 +47,8 @@ const ReportGeneration = () => {
             } else if (reportType === 'Leave Summary') {
                 const resp = await axios.get('http://localhost:8000/api/leave/records/');
                 const records = resp.data.results || resp.data || [];
-                setColumns(['Employee ID', 'Start Date', 'End Date', 'Reason']);
-                setReportData(records.map(r => [r.employee, r.start_date, r.end_date, r.reason]));
+                setColumns(['Employee ID', 'Start Date', 'End Date', 'Reason', 'Status']);
+                setReportData(records.map(r => [r.employee, r.start_date, r.end_date, r.reason, r.status]));
             }
         } catch (err) {
             alert("Failed to generate report: " + err.message);
