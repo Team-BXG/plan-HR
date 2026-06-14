@@ -7,6 +7,23 @@ const LeaveManager = () => {
 
     const [employees, setEmployees] = useState([]);
     const [activeEmployee, setActiveEmployee] = useState('');
+    const [viewMode, setViewMode] = useState('approved'); // 'approved' or 'custom'
+    const [approvedLeaves, setApprovedLeaves] = useState([]);
+
+    React.useEffect(() => {
+        if (isGenerate && viewMode === 'approved') {
+            const fetchApproved = async () => {
+                try {
+                    const resp = await axios.get('http://localhost:8000/api/leave/records/?status=approved');
+                    const data = resp.data.results || resp.data;
+                    setApprovedLeaves(data);
+                } catch(e) {
+                    console.error('Failed to fetch approved leaves', e);
+                }
+            };
+            fetchApproved();
+        }
+    }, [isGenerate, viewMode]);
 
     React.useEffect(() => {
         const fetchEmployees = async () => {
@@ -66,10 +83,54 @@ const LeaveManager = () => {
             
             {isGenerate ? (
                 <div style={{ maxWidth: '900px' }}>
-                    <div style={{ marginBottom: '20px' }}>
-                        <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Leave Records</span>
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '15px', borderBottom: '1px solid var(--green-300)', paddingBottom: '10px' }}>
+                        <button 
+                            className="btn-primary"
+                            style={{ background: viewMode === 'approved' ? 'var(--green-700)' : 'transparent', color: viewMode === 'approved' ? 'white' : 'var(--green-800)', border: '1px solid var(--green-700)' }}
+                            onClick={() => setViewMode('approved')}
+                        >
+                            Approved Leaves
+                        </button>
+                        <button 
+                            className="btn-primary"
+                            style={{ background: viewMode === 'custom' ? 'var(--green-700)' : 'transparent', color: viewMode === 'custom' ? 'white' : 'var(--green-800)', border: '1px solid var(--green-700)' }}
+                            onClick={() => setViewMode('custom')}
+                        >
+                            Custom Report
+                        </button>
                     </div>
 
+                    {viewMode === 'approved' ? (
+                        <div className="glass-panel" style={{ padding: '0', overflow: 'hidden' }}>
+                            <table style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                <thead>
+                                    <tr style={{ backgroundColor: '#e0e0e0', color: '#555' }}>
+                                        <th style={{ padding: '10px' }}>Employee</th>
+                                        <th style={{ padding: '10px' }}>Name</th>
+                                        <th style={{ padding: '10px' }}>Start Date</th>
+                                        <th style={{ padding: '10px' }}>End Date</th>
+                                        <th style={{ padding: '10px' }}>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {approvedLeaves.length > 0 ? approvedLeaves.map((l, i) => (
+                                        <tr key={i} style={{ borderBottom: '1px solid #eee' }}>
+                                            <td style={{ padding: '10px' }}>{l.employee}</td>
+                                            <td>{l.employee_name}</td>
+                                            <td>{l.start_date}</td>
+                                            <td>{l.end_date}</td>
+                                            <td>{l.reason}</td>
+                                        </tr>
+                                    )) : (
+                                        <tr>
+                                            <td colSpan="5" style={{ padding: '40px', color: '#888' }}>No approved leaves found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                    <>
                     <div style={{ marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '5px' }}>
                         <label style={{ fontSize: '13px', color: 'var(--text-primary)' }}>Employee:</label>
                         <select className="input-field" value={activeEmployee} onChange={(e) => setActiveEmployee(e.target.value)} style={{ width: '250px', background: '#dcecdb' }}>
@@ -117,7 +178,10 @@ const LeaveManager = () => {
                         </table>
                     </div>
 
-            {showNoRecords && (
+                    </>
+                    )}
+
+            {showNoRecords && viewMode === 'custom' && (
                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(3px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ width: '400px', backgroundColor: '#f0f4f8', borderRadius: '8px', padding: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)', border: '1px solid var(--green-400)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid white', paddingBottom: '10px' }}>

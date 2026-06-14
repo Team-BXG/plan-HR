@@ -14,6 +14,7 @@ class LeaveViewSet(viewsets.ModelViewSet):
         department = request.query_params.get('department')
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
+        status_param = request.query_params.get('status')
         
         queryset = self.get_queryset()
         if employee_id:
@@ -22,6 +23,8 @@ class LeaveViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(employee__department=department)
         if start_date and end_date:
             queryset = queryset.filter(leave_date__range=[start_date, end_date])
+        if status_param:
+            queryset = queryset.filter(status=status_param)
             
         serializer = self.get_serializer(queryset, many=True)
         # map to start_date/end_date for UI
